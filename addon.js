@@ -12,6 +12,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 7001;
 
+// ===== 路由 =====
+// 1. 根目录重定向到 manifest
+app.get('/', (req, res) => res.redirect('/manifest.json'));
+
+// 2. 配置页
+app.get('/configure', (req, res) => {
+  res.type('html').send(renderConfigurePage(getDefaultConfig()));
+});
+
 // 🆕 开启 CORS，允许 Stremio 跨域请求
 app.use(cors());
 

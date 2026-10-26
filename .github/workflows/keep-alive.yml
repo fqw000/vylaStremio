@@ -1,0 +1,48 @@
+name: Keep Addon Alive
+
+on:
+  schedule:
+    # 每 10 分钟运行一次
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Addon URL
+        env:
+          TARGET_URL: ${{ secrets.ADDON_URL }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+        run: |
+          if [ -z "$TARGET_URL" ]; then
+            echo "❌ 错误: 未配置 ADDON_URL Secret"
+            exit 1
+          fi
+          
+          echo "正在请求: $TARGET_URL"
+          # 发送请求，获取状态码，超时设为 60 秒
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 60 "$TARGET_URL")
+          echo "响应状态码: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ 保活请求成功"
+          else
+            echo "⚠️ 请求返回异常状态码: $HTTP_STATUS"
+            
+            # 如果配置了 BARK_KEY，则发送通知
+            if [ -n "$BARK_KEY" ]; then
+              echo "📱 正在发送 Bark 通知..."
+              # 对标题和内容进行 URL 编码
+              TITLE=$(python3 -c "import urllib.parse; print(urllib.parse.quote('Addon 保活失败'))")
+              BODY=$(python3 -c "import urllib.parse; print(urllib.parse.quote('状态码: $HTTP_STATUS\nURL: $TARGET_URL'))")
+              
+              # 调用 Bark API (支持自建服务器则把 api.day.app 换掉)
+              curl -s -m 10 "https://api.day.app/$BARK_KEY/$TITLE/$BODY?group=vyla-addon&level=timeSensitive" > /dev/null
+              echo "通知发送完毕"
+            else
+              echo "ℹ️ 未配置 BARK_KEY，跳过通知"
+            fi
+            
+            exit 1
+          fi
