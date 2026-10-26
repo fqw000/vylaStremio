@@ -1,0 +1,20 @@
+{
+  "name": "vyla addon",
+  "version": "1.0.0",
+  "description": "根据@vyla-entertainment/sd 提供stream、 subtitles",
+  "main": "index.js",
+  "scripts": {
+    "start": "node addon.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "wangqifei.eu.org",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@vyla-entertainment/sdk": "^1.20.0",
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "stremio-addon-sdk": "^1.6.10"
+  }
+}
